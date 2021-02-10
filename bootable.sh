@@ -200,6 +200,15 @@ cp data/azerty.kmap $rootfs/etc/french.kmap
 
 echo "mise en place de fbv"
 
+echo "Installation de libs"
+
+if [ ! -d "build/zlib-1.2.11"]; then
+	tar -xzC build -f required/zlib-1.2.11.tar.gz
+fi
+prefix=$rootfs CC=${PREFIX_CC}gcc ./configure
+make install
+
+
 # unmount the partitions
 umount ${partitions[0]} || /bin/true # ignore error
 umount ${partitions[1]} || /bin/true # ignore error
