@@ -34,6 +34,10 @@ if [ ! -d data ]; then
 	mkdir data
 fi
 
+if [ ! -d src ]; then
+	mkdir src
+fi
+
 read -p "Entrez l'identifiant du périphérique à rendre bootable (/dev/sdX) (juste le sdX) " device
 export device=/dev/$device
 echo "device : "$device
