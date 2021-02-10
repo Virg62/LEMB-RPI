@@ -21,10 +21,11 @@ if [ ! -f src/tools.zip ]; then
 	wget "https://github.com/raspberrypi/tools/archive/master.zip" -O src/tools.zip
 fi
 
-
-read -p "Supprimer build ? [y-n] " build
-if [ $build == "y" ]; then
-	rm -rf build
+if [ -d build ]; then
+	read -p "Supprimer build ? [y-n] " build
+	if [ $build == "y" ]; then
+		rm -rf build
+	fi
 fi
 
 mkdir -p build
@@ -96,7 +97,8 @@ mount ${partitions[1]} $rootfs
 # copie part boot
 read -p "Copier partition boot ? (y/n) " cpboot
 if [ $cpboot == "y" ]; then
-	cp -r data/boot/* $boot
+	unzip required/boot -d build
+	cp -r build/boot/* $boot
 fi
 
 read -p "Copier cmdline.txt ? (y/n) " cmdline
