@@ -7,9 +7,13 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-if [ $(basename "`pwd`") != "rpi" ]; then
+if [ $(basename "`pwd`") != "custom-rpi-os" ]; then
 	echo "Merci de lancer le script dans son répertoire"
 	exit 1
+fi
+
+if [ ! -d src ]; then
+        mkdir src
 fi
 
 # Vérification des sources
@@ -32,10 +36,6 @@ mkdir -p build
 
 if [ ! -d data ]; then
 	mkdir data
-fi
-
-if [ ! -d src ]; then
-	mkdir src
 fi
 
 read -p "Entrez l'identifiant du périphérique à rendre bootable (/dev/sdX) (juste le sdX) " device
