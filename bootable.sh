@@ -185,18 +185,20 @@ chmod +x $rootfs/etc/init.d/rcS
 echo "Mise en place keymap"
 cp data/azerty.kmap $rootfs/etc/french.kmap
 
-echo "Mise en place de ncurses"
-enter2continue
+# echo "Mise en place de ncurses"
+# enter2continue
 
-if [ ! -d "build/ncurses-6.2" ]; then
-	tar -xzC build -f required/ncurses-6.2.tar.gz
-fi
+# if [ ! -d "build/ncurses-6.2" ]; then
+	# tar -xzC build -f required/ncurses-6.2.tar.gz
+# fi
 
-pushd data/ncurses-6.2
-	./configure --prefix=$rootfs --with-build-cc=${PREFIX_CC}gcc
-	make -j9
-	make install
-popd
+# pushd build/ncurses-6.2
+	# ./configure --prefix=$rootfs --with-build-cc=${PREFIX_CC}gcc --with-shared --host=x86_64-build_unknown-linux-gnu --target=arm-linux-gnueabihf --without-progs
+	# make -j9
+	# make install
+# popd
+
+echo "mise en place de fbv"
 
 # unmount the partitions
 umount ${partitions[0]} || /bin/true # ignore error
