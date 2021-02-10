@@ -15,13 +15,18 @@ fi
 if [ ! -d src ]; then
         mkdir src
 fi
+source helpers.sh
 
 # Vérification des sources
 if [ ! -f src/busybox-1.33.0.tar.bz2 ]; then
+	echo "Nous avons besoin de télécharger busybox"
+	enter2continue
 	wget "https://busybox.net/downloads/busybox-1.33.0.tar.bz2" -O src/busybox-1.33.0.tar.bz2
 fi
 
 if [ ! -f src/tools.zip ]; then
+	echo "Nous avons besoin de télécharger des outils"
+	enter2continue
 	wget "https://github.com/raspberrypi/tools/archive/master.zip" -O src/tools.zip
 fi
 
@@ -101,7 +106,11 @@ mount ${partitions[1]} $rootfs
 # copie part boot
 read -p "Copier partition boot ? (y/n) " cpboot
 if [ $cpboot == "y" ]; then
-	unzip required/boot -d build
+	if [ ! -d "build/boot" ]; then
+		echo "extraction de src/boot"
+		enter2continue
+		unzip required/boot -d build
+	fi
 	cp -r build/boot/* $boot
 fi
 
@@ -174,3 +183,21 @@ chmod +x $rootfs/etc/init.d/rcS
 
 echo "Mise en place keymap"
 cp data/azerty.kmap $rootfs/etc/french.kmap
+
+echo "Mise en place de ncurses"
+enter2continue
+
+if [ ! -d "build/ncurses-6.2" ]; then
+	tar -xzC build -f required/ncurses-6.2.tar.gz
+fi
+
+pushd data/ncurses-6.2
+	./configure --prefix=$rootfs --with-build-cc=${PREFIX_CC}gcc
+	make -j9
+	make install
+popd
+
+# unmount the partitions
+umount ${partitions[0]} || /bin/true # ignore error
+umount ${partitions[1]} || /bin/true # ignore error
+
