@@ -1,0 +1,7 @@
+label: dos
+label-id: 0x9f003673
+device: /dev/mmcblk0
+unit: sectors
+
+/dev/mmcblk0p1 : start=        2048, size=      409600, type=c, bootable
+/dev/mmcblk0p2 : start=      411648, size=      409600, type=83
