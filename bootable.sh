@@ -12,6 +12,16 @@ if [ $(basename "`pwd`") != "rpi" ]; then
 	exit 1
 fi
 
+# Vérification des sources
+if [ ! -f src/busybox-1.33.0.tar.bz2 ]; then
+	wget "https://busybox.net/downloads/busybox-1.33.0.tar.bz2" -O src/busybox-1.33.0.tar.bz2
+fi
+
+if [ ! -f src/tools.zip ]; then
+	wget "https://github.com/raspberrypi/tools/archive/master.zip" -O src/tools.zip
+fi
+
+
 read -p "Supprimer build ? [y-n] " build
 if [ $build == "y" ]; then
 	rm -rf build
