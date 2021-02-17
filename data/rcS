@@ -6,4 +6,4 @@ mount / -o remount,rw
 
 loadkmap < /etc/french.kmap
 passwd root
-login root
+login
