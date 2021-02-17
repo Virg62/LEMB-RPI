@@ -17,6 +17,8 @@ if [ ! -d src ]; then
 fi
 source helpers.sh
 
+rootdir=$(pwd)
+
 # Vérification des sources
 if [ ! -f src/busybox-1.33.0.tar.bz2 ]; then
 	echo "Nous avons besoin de télécharger busybox"
@@ -148,19 +150,23 @@ if [ ! -d "build/busybox-1.33.0" ]; then
 	popd
 fi
 
-echo "installation de busybox sur la clef"
+read -p "installer busybox ? (y/n) " busybox
+if [ $busybox == "y" ]; then
+	echo "installation de busybox sur la clef"
+	pushd build/busybox-1.33.0
+		make CROSS_COMPILE=$PREFIX_CC CONFIG_PREFIX=$rootfs install
+	popd
+fi
 
-pushd build/busybox-1.33.0
-	make CROSS_COMPILE=$PREFIX_CC CONFIG_PREFIX=$rootfs install
-popd
-
-echo "Création /dev busybox"
-mkdir -p $rootfs/dev; 
-pushd $rootfs/dev; 
-	/sbin/MAKEDEV generic console
-popd
+read -p "mettre en place /dev busybox ? (y/n) " dev
+if [ $dev == "y" ]; then
+	echo "Création /dev busybox"
+	mkdir -p $rootfs/dev; 
+	pushd $rootfs/dev; 
+		/sbin/MAKEDEV generic console
+	popd
+fi
 mkdir -p $rootfs/etc/init.d $rootfs/proc $rootfs/sys $rootfs/root/run $rootfs/root/proc $rootfs/root/sys $rootfs/run $rootfs/lib $rootfs/lib64
-
 
 # echo "copie des librairies"
 # copie des libs de lib
@@ -201,11 +207,38 @@ echo "mise en place de fbv"
 
 echo "Installation de libs"
 
-if [ ! -d "build/zlib-1.2.11"]; then
-	tar -xzC build -f required/zlib-1.2.11.tar.gz
+# if [ ! -d "build/zlib-1.2.11"]; then
+#	tar -xzC build -f required/zlib-1.2.11.tar.gz
+# fi
+# prefix=$rootfs CC=${PREFIX_CC}gcc ./configure
+# make install
+
+if [ ! -d "build/wiringPi" ]; then
+	unzip required/wiringPi -d build
 fi
-prefix=$rootfs CC=${PREFIX_CC}gcc ./configure
-make install
+
+pushd build/wiringPi
+	wiringPi=$(pwd)
+	pushd wiringPi
+		make install DESTDIR=$rootfs CC=${PREFIX_CC}gcc
+	popd
+	pushd devLib
+		make install DESTDIR=$rootfs CC=${PREFIX_CC}gcc INCLUDE=$wiringPi
+	popd
+	pushd gpio
+		make install DESTDIR=$rootfs CC=${PREFIX_CC}gcc
+	popd
+	./build
+popd
+
+read -p "mettre l'exemple wiringPi ? (y/n) " exampleWiring
+if [ $exampleWiring == "y" ]; then
+	pushd examples/wiringPi
+		make all CC=${PREFIX_CC}gcc INCLUDE="-I${rootdir}/build/wiringPi/wiringPi" LIB="-L$rootfs/lib"
+		mkdir -p $rootfs/examples-wiringPi
+		cp blinkstop btn led led2 $rootfs/examples-wiringPi
+	popd
+fi
 
 
 # unmount the partitions
