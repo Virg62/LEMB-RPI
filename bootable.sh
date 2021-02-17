@@ -241,6 +241,10 @@ if [ $exampleWiring == "y" ]; then
 fi
 
 
+# ajout des utilisateurs
+echo "root:x:0:0:root:/root:/bin/sh">$rootfs/etc/passwd
+echo "root:x:0:root">$rootfs/etc/groups
+
 # unmount the partitions
 umount ${partitions[0]} || /bin/true # ignore error
 umount ${partitions[1]} || /bin/true # ignore error
