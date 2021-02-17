@@ -218,23 +218,28 @@ if [ ! -d "build/wiringPi" ]; then
 fi
 
 pushd build/wiringPi
-	wiringPi=$(pwd)
+	mkdir -p result
+	result=$(pwd)/result
+
 	pushd wiringPi
-		make install DESTDIR=$rootfs CC=${PREFIX_CC}gcc
+		make install DESTDIR=$result CC=${PREFIX_CC}gcc
 	popd
 	pushd devLib
-		make install DESTDIR=$rootfs CC=${PREFIX_CC}gcc INCLUDE=$wiringPi
+		make install DESTDIR=$result CC=${PREFIX_CC}gcc INCLUDE=${result}/include
 	popd
 	pushd gpio
-		make install DESTDIR=$rootfs CC=${PREFIX_CC}gcc
+		make install DESTDIR=$result CC=${PREFIX_CC}gcc
 	popd
 	./build
+	cp $result/lib/* $rootfs/lib
+	cp $result/gpio $rootfs/bin
 popd
 
 read -p "mettre l'exemple wiringPi ? (y/n) " exampleWiring
 if [ $exampleWiring == "y" ]; then
 	pushd examples/wiringPi
-		make all CC=${PREFIX_CC}gcc INCLUDE="-I${rootdir}/build/wiringPi/wiringPi" LIB="-L$rootfs/lib"
+		make clean
+		make all CC=${PREFIX_CC}gcc INCLUDE="-I${rootdir}/build/wiringPi/wiringPi/include -I${rootdir}/build/wiringPi/devLib/include -I${rootdir}/build/wiringPi/gpio/include" LIB="-L$r/lib"
 		mkdir -p $rootfs/examples-wiringPi
 		cp blinkstop btn led led2 $rootfs/examples-wiringPi
 	popd
