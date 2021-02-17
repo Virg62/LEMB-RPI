@@ -190,14 +190,31 @@ chmod +x $rootfs/etc/init.d/rcS
 echo "Mise en place keymap"
 cp data/azerty.kmap $rootfs/etc/french.kmap
 
+
+# ajout des utilisateurs
+echo "root:x:0:0:root:/root:/bin/sh">$rootfs/etc/passwd
+echo "root:x:0:root">$rootfs/etc/groups
+
+read -p "Installer ncurses ? (y/n)" nc
+
 # echo "Mise en place de ncurses"
 # enter2continue
-
-# if [ ! -d "build/ncurses-6.2" ]; then
-	# tar -xzC build -f required/ncurses-6.2.tar.gz
-# fi
-
-# pushd build/ncurses-6.2
+if [ $nc == "y" ]; then
+	if [ ! -d "build/ncurses-6.2" ]; then
+		tar -xzC build -f required/ncurses-6.2.tar.gz
+		pushd build/ncurses-6.2
+			export CC=${PREFIX_CC}gcc
+			export CXX=${PREFIX_CC}g++
+			./configure --prefix=$rootfs --with-shared --host=x86_64-build_unknown-linux-gnu --target=arm-linux-gnueabihf --disable-stripping
+			make -j2
+			make install
+			# Mise en place des variables d'environement
+			echo "export TERMINFO=/share/terminfo" > $rootfs/etc/profile
+			echo "export TERM=linux" >> $rootfs/etc/profile
+		popd	
+	fi
+fi
+# 
 	# ./configure --prefix=$rootfs --with-build-cc=${PREFIX_CC}gcc --with-shared --host=x86_64-build_unknown-linux-gnu --target=arm-linux-gnueabihf --without-progs
 	# make -j9
 	# make install
@@ -246,9 +263,6 @@ if [ $exampleWiring == "y" ]; then
 fi
 
 
-# ajout des utilisateurs
-echo "root:x:0:0:root:/root:/bin/sh">$rootfs/etc/passwd
-echo "root:x:0:root">$rootfs/etc/groups
 
 # unmount the partitions
 umount ${partitions[0]} || /bin/true # ignore error
