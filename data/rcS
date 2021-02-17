@@ -5,3 +5,5 @@ mount none /sys -t sysfs
 mount / -o remount,rw
 
 loadkmap < /etc/french.kmap
+passwd root
+login
