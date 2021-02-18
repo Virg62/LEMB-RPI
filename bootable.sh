@@ -192,13 +192,12 @@ cp data/azerty.kmap $rootfs/etc/french.kmap
 
 
 # ajout des utilisateurs
+echo "Ajout des utilisateurs"
 echo "root:x:0:0:root:/root:/bin/sh">$rootfs/etc/passwd
 echo "root:x:0:root">$rootfs/etc/groups
 
 read -p "Installer ncurses ? (y/n)" nc
-
-# echo "Mise en place de ncurses"
-# enter2continue
+echo "Mise en place de ncurses"
 if [ $nc == "y" ]; then
 	if [ ! -d "build/ncurses-6.2" ]; then
 		tar -xzC build -f required/ncurses-6.2.tar.gz
@@ -214,11 +213,6 @@ if [ $nc == "y" ]; then
 		popd	
 	fi
 fi
-# 
-	# ./configure --prefix=$rootfs --with-build-cc=${PREFIX_CC}gcc --with-shared --host=x86_64-build_unknown-linux-gnu --target=arm-linux-gnueabihf --without-progs
-	# make -j9
-	# make install
-# popd
 
 echo "mise en place de fbv"
 
@@ -230,27 +224,31 @@ echo "Installation de libs"
 # prefix=$rootfs CC=${PREFIX_CC}gcc ./configure
 # make install
 
-if [ ! -d "build/wiringPi" ]; then
-	unzip required/wiringPi -d build
+read "Installer wiringPi ? (y/n) " $wp
+if [ $wp == "y" ]; then
+	if [ ! -d "build/wiringPi" ]; then
+		unzip required/wiringPi -d build
+	fi
+
+	echo "installation de wiringPi"
+	pushd build/wiringPi
+		mkdir -p result
+		result=$(pwd)/result
+
+		pushd wiringPi
+			make install DESTDIR=$result CC=${PREFIX_CC}gcc
+		popd
+		pushd devLib
+			make install DESTDIR=$result CC=${PREFIX_CC}gcc INCLUDE=${result}/include
+		popd
+		pushd gpio
+			make install DESTDIR=$result CC=${PREFIX_CC}gcc
+		popd
+		./build
+		cp $result/lib/* $rootfs/lib
+		cp $result/gpio $rootfs/bin
+	popd
 fi
-
-pushd build/wiringPi
-	mkdir -p result
-	result=$(pwd)/result
-
-	pushd wiringPi
-		make install DESTDIR=$result CC=${PREFIX_CC}gcc
-	popd
-	pushd devLib
-		make install DESTDIR=$result CC=${PREFIX_CC}gcc INCLUDE=${result}/include
-	popd
-	pushd gpio
-		make install DESTDIR=$result CC=${PREFIX_CC}gcc
-	popd
-	./build
-	cp $result/lib/* $rootfs/lib
-	cp $result/gpio $rootfs/bin
-popd
 
 read -p "mettre l'exemple wiringPi ? (y/n) " exampleWiring
 if [ $exampleWiring == "y" ]; then
