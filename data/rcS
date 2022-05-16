@@ -5,5 +5,9 @@ mount none /sys -t sysfs
 mount / -o remount,rw
 
 loadkmap < /etc/french.kmap
+
+# Init LAN
+/etc/init.d/rc.network & 
+/etc/init.d/rc.services &
 passwd root
-login
+

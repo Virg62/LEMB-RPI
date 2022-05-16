@@ -1,0 +1,4 @@
+#!/bin/sh
+# rc.services – Lancement des services du systeme
+telnetd
+httpd -h /tmp

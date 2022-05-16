@@ -1,0 +1,33 @@
+#! /bin/sh
+# /etc/udhcpc/udhcpc.action - Attribution d'adresse par DHCP
+case "$1" in
+ bound|renew)
+ command="$interface $ip"
+ if [ "$broadcast" != "" ]; then
+ command="$command broadcast $broadcast"
+ fi
+ if [ "$netmask" != "" ]; then
+ command="$command netmask $netmask"
+ fi
+ /sbin/ifconfig $command
+
+ if [ "$router" != "" ]; then
+ route del default gw 0.0.0.0 dev $interface
+ for r in $router; do
+ route add default gw $r dev $interface
+ done
+ fi
+
+ rm /etc/resolv.conf
+ if [ "$domain" != "" ]; then
+ echo "search $domain" > /etc/resolv.conf
+ fi
+ for d in $dns; do
+ echo "nameserver $d" >> /etc/resolv.conf
+ done
+ ;;
+
+ defconfig)
+ /sbin/ifconfig $interface 0.0.0.0
+ ;;
+esac

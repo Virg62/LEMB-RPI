@@ -1,0 +1,10 @@
+#!/bin/sh
+# ifplugd.action - changement d'etat port Ethernet
+if [ "$1" = "eth0" ] ; then
+ if [ "$2" = "up" ] ; then
+ udhcpc -i eth0 -s /etc/udhcpc/udhcpc.action
+ fi
+ if [ "$2" = "down" ] ; then
+ killall udhcpc
+ fi
+fi

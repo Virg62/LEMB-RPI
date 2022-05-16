@@ -1,0 +1,7 @@
+#!/bin/sh
+/sbin/ifconfig lo 127.0.0.1
+while ! /sbin/ifconfig -a | grep eth0 >/dev/null
+do
+	sleep 1
+done
+ifplugd -i eth0

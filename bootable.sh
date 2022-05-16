@@ -7,7 +7,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-if [ $(basename "`pwd`") != "custom-rpi-os" ]; then
+if [ $(basename "`pwd`") != "LEMB-RPI" ]; then
 	echo "Merci de lancer le script dans son répertoire"
 	exit 1
 fi
@@ -111,7 +111,8 @@ if [ $cpboot == "y" ]; then
 	if [ ! -d "build/boot" ]; then
 		echo "extraction de src/boot"
 		enter2continue
-		unzip required/boot -d build
+		#unzip required/boot -d build
+		tar xvf required/boot.tar.gz -C build/boot/
 	fi
 	cp -r build/boot/* $boot
 fi
@@ -187,6 +188,14 @@ echo "création du scrip sh rcS"
 cp data/rcS $rootfs/etc/init.d/rcS
 chmod +x $rootfs/etc/init.d/rcS
 
+# MeP réseau
+mkdir -p $rootfs/etc/ifplugd $rootfs/etc/udhcpc $rootfs/tmp
+cp data/rc.network $rootfs/etc/init.d/
+cp data/ifplugd.action $rootfs/etc/ifplugd/
+cp data/udhcpc.action $rootfs/etc/udhcpc/
+
+cp data/rc.services $rootfs/etc/init.d/
+
 echo "Mise en place keymap"
 cp data/azerty.kmap $rootfs/etc/french.kmap
 
@@ -216,6 +225,31 @@ fi
 
 echo "mise en place de fbv"
 
+export CC=${PREFIX_CC}gcc
+export CXX=${PREFIX_CC}g++
+export LDFLAGS=-L$rootfs/usr/lib
+export CPPFLAGS=-I$rootfs/usr/include
+
+# Zlib 
+# ./configure --prefix=$rootfs/usr
+
+# LibPNG
+
+# ./configure --prefix=/mnt/rootfs/usr/ --with-shared --host=x86_64-build_unknown-linux-gnu --build=arm-linux-gnueabihf --disable-strippin
+
+# LibJPG
+# /configure --prefix=/mnt/rootfs/usr/ --with-shared --host=x86_64-build_unknown-linux-gnu --build=arm-linux-gnueabihf --disable-stripping
+
+cd build/fbv-master
+./configure
+cd ../..
+cp data/fbv.Makefile build/fbv-master/Makefile
+cd build/fbv-master
+make -j8
+make install
+# 
+
+
 echo "Installation de libs"
 
 # if [ ! -d "build/zlib-1.2.11"]; then
@@ -224,7 +258,7 @@ echo "Installation de libs"
 # prefix=$rootfs CC=${PREFIX_CC}gcc ./configure
 # make install
 
-read "Installer wiringPi ? (y/n) " $wp
+read "Installer wiringPi ? (y/n) " wp
 if [ $wp == "y" ]; then
 	if [ ! -d "build/wiringPi" ]; then
 		unzip required/wiringPi -d build
