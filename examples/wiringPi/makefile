@@ -6,7 +6,7 @@ all : led btn blinkstop
 
 led : led.o
 	@echo Edition de liens
-	$(CC) led.o -o led $(LIB) $(FLAG)
+	$(CC) $(INCLUDE) led.o  -o led $(LIB) $(FLAG)
 	
 blinkstop : blinkstop.o
 	@echo Edition de liens

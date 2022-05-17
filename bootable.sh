@@ -206,21 +206,23 @@ echo "root:x:0:0:root:/root:/bin/sh">$rootfs/etc/passwd
 echo "root:x:0:root">$rootfs/etc/groups
 
 read -p "Installer ncurses ? (y/n)" nc
-echo "Mise en place de ncurses"
+
 if [ $nc == "y" ]; then
+	echo "Mise en place de ncurses"
 	if [ ! -d "build/ncurses-6.2" ]; then
 		tar -xzC build -f required/ncurses-6.2.tar.gz
-		pushd build/ncurses-6.2
-			export CC=${PREFIX_CC}gcc
-			export CXX=${PREFIX_CC}g++
-			./configure --prefix=$rootfs --with-shared --host=x86_64-build_unknown-linux-gnu --target=arm-linux-gnueabihf --disable-stripping
-			make -j2
-			make install
-			# Mise en place des variables d'environement
-			echo "export TERMINFO=/share/terminfo" > $rootfs/etc/profile
-			echo "export TERM=linux" >> $rootfs/etc/profile
-		popd	
 	fi
+	pushd build/ncurses-6.2
+		export CC=${PREFIX_CC}gcc
+		export CXX=${PREFIX_CC}g++
+		./configure --prefix=$rootfs/usr --with-shared --host=x86_64-build_unknown-linux-gnu --target=arm-linux-gnueabihf --disable-stripping
+		make -j2
+		make install
+		# Mise en place des variables d'environement
+		echo "export TERMINFO=/share/terminfo" > $rootfs/etc/profile
+		echo "export TERM=linux" >> $rootfs/etc/profile
+	popd	
+	
 fi
 
 echo "mise en place de fbv"
@@ -230,35 +232,48 @@ export CXX=${PREFIX_CC}g++
 export LDFLAGS=-L$rootfs/usr/lib
 export CPPFLAGS=-I$rootfs/usr/include
 
-# Zlib 
-# ./configure --prefix=$rootfs/usr
+read -p "Installer librairies Images ? (y/n) " libsj
+if [ $libsj == "y" ]; then
+	pushd build/zlib-1.2.11
+		./configure --prefix=$rootfs/usr
+		make -j8
+		make install
+	popd
 
-# LibPNG
+	pushd build/libpng-1.6.37
+		./configure --prefix=/mnt/rootfs/usr/ --with-shared --host=x86_64-build_unknown-linux-gnu --build=arm-linux-gnueabihf --disable-stripping
+		make -j8
+		make install
+	popd
 
-# ./configure --prefix=/mnt/rootfs/usr/ --with-shared --host=x86_64-build_unknown-linux-gnu --build=arm-linux-gnueabihf --disable-strippin
+	pushd build/jpeg-9d
+		./configure --prefix=/mnt/rootfs/usr/ --with-shared --host=x86_64-build_unknown-linux-gnu --build=arm-linux-gnueabihf --disable-stripping
+		make -j8
+		make install
+	popd
 
-# LibJPG
-# /configure --prefix=/mnt/rootfs/usr/ --with-shared --host=x86_64-build_unknown-linux-gnu --build=arm-linux-gnueabihf --disable-stripping
+fi
 
-cd build/fbv-master
-./configure
-cd ../..
-cp data/fbv.Makefile build/fbv-master/Makefile
-cd build/fbv-master
-make -j8
-make install
+
+read -p "Installer fbv (y/n) " fbv
+if [ $fbv == "y" ]; then
+	pushd build/fbv-master
+		./configure
+	popd
+
+	cp data/fbv.Makefile build/fbv-master/Makefile
+
+	pushd build/fbv-master
+		make -j8
+		make install
+	popd
+fi
 # 
 
 
 echo "Installation de libs"
 
-# if [ ! -d "build/zlib-1.2.11"]; then
-#	tar -xzC build -f required/zlib-1.2.11.tar.gz
-# fi
-# prefix=$rootfs CC=${PREFIX_CC}gcc ./configure
-# make install
-
-read "Installer wiringPi ? (y/n) " wp
+read -p "Installer wiringPi ? (y/n) " wp
 if [ $wp == "y" ]; then
 	if [ ! -d "build/wiringPi" ]; then
 		unzip required/wiringPi -d build
@@ -267,28 +282,29 @@ if [ $wp == "y" ]; then
 	echo "installation de wiringPi"
 	pushd build/wiringPi
 		mkdir -p result
-		result=$(pwd)/result
+		export result=$rootfs
 
 		pushd wiringPi
 			make install DESTDIR=$result CC=${PREFIX_CC}gcc
 		popd
 		pushd devLib
-			make install DESTDIR=$result CC=${PREFIX_CC}gcc INCLUDE=${result}/include
+			make install DESTDIR=$result CC=${PREFIX_CC}gcc INCLUDE=${result}/usr/include
 		popd
 		pushd gpio
 			make install DESTDIR=$result CC=${PREFIX_CC}gcc
 		popd
 		./build
-		cp $result/lib/* $rootfs/lib
-		cp $result/gpio $rootfs/bin
+		rm $rootfs/lib/libwiringPi.so
+		rm $rootfs/lib/libwiringPiDev.so
+		ln -s /lib/libwiringPi.so.2.46 $rootfs/lib/libwiringPi.so
+		ln -s /lib/libwiringPiDev.so.2.46 $rootfs/lib/libwiringPiDev.so
 	popd
 fi
+
 
 read -p "mettre l'exemple wiringPi ? (y/n) " exampleWiring
 if [ $exampleWiring == "y" ]; then
 	pushd examples/wiringPi
-		make clean
-		make all CC=${PREFIX_CC}gcc INCLUDE="-I${rootdir}/build/wiringPi/wiringPi/include -I${rootdir}/build/wiringPi/devLib/include -I${rootdir}/build/wiringPi/gpio/include" LIB="-L$r/lib"
 		mkdir -p $rootfs/examples-wiringPi
 		cp blinkstop btn led led2 $rootfs/examples-wiringPi
 	popd
